@@ -1,0 +1,11 @@
+[Unit]
+Description=Read-only Feishu catalog refresh
+After=network-online.target
+[Service]
+Type=oneshot
+User=dmr
+WorkingDirectory=/opt/dmr
+EnvironmentFile=/etc/dmr/platform.env
+ExecStart=/opt/dmr/.venv/bin/python /opt/dmr/scripts/read_feishu_catalog.py --output /opt/dmr/data/feishu_catalog.json
+UMask=0077
+TimeoutStartSec=3600

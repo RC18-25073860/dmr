@@ -1,0 +1,8 @@
+[Unit]
+Description=Refresh known Feishu directory every day
+[Timer]
+OnCalendar=*-*-* 07:30:00 Asia/Shanghai
+Persistent=true
+Unit=dmr-catalog.service
+[Install]
+WantedBy=timers.target

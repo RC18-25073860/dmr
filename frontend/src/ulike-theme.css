@@ -1,0 +1,166 @@
+/* Ulike Components workbench theme. Visual-only overrides for the existing DMR UI. */
+:root {
+  --ink: #0d0b0c;
+  --ink-soft: #292526;
+  --blue: #292526;
+  --blue-2: #292526;
+  --blue-pale: #f3f0ea;
+  --paper: #f8f6f4;
+  --line: #ebe7e8;
+  --line-strong: #d9d5d6;
+  --muted: #6f696b;
+  --green: #256b50;
+  --green-pale: #e8f2ed;
+  --amber: #6e68b8;
+  --amber-pale: #efeffb;
+  --red: #b42318;
+  --red-pale: #fae9e6;
+  --shadow: 0 2px 10px rgba(13, 11, 12, .04);
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+
+body { font-synthesis-weight: none; }
+:focus-visible { outline: 3px solid #6e68b8; outline-offset: 2px; }
+
+/* Shell and navigation keep their established dimensions and behavior. */
+.sidebar, .login-card .brand { color: #fff; background: #0d0b0c; }
+.brand-seal { border-color: #d9d8f6; transform: none; }
+.brand small, .sidebar-state small, .prototype-mark small { color: #bdb7ba; }
+.nav-item { color: #e7e1e3; border-radius: 8px; }
+.nav-item:hover { background: #292526; }
+.nav-item.active { color: #fff; background: #292526; }
+.nav-item.active::before { display: block; background: #d92d5c; }
+.nav-item em { color:#292526; background: #f7e8eb; }
+.sidebar-state { background: #1e1b1c; }
+.prototype-mark { background: #1e1b1c; }
+.prototype-mark > span { color: #d9d8f6; border-color: #6f696b; }
+.topbar { background: #fff; backdrop-filter: none; }
+.breadcrumb, .top-search input { font-size: 12px; }
+.top-search, .icon-button, .user-avatar { border-radius: 8px; }
+.user-avatar { font-family: var(--font-body); }
+
+/* Type, surfaces and actions follow the console density from the skill. */
+.eyebrow { color:#292526; }
+.page-heading h1, .page-heading.compact h1, .panel-head h2,
+.intake-panel-head h2, .intake-processing-card header h2,
+.modal-head h2, .login-body h1, .cloud-catalog-hero h2 {
+  font-family: var(--font-body);
+  font-weight: 620;
+  letter-spacing: -.025em;
+}
+.primary-button { color: #fff; border-color: #d92d5c; background: #d92d5c; box-shadow: none; }
+.primary-button:hover:not(:disabled) { border-color: #b9224b; background: #b9224b; }
+.secondary-button { color: #292526; border-color: #d9d5d6; background: #fff; }
+.secondary-button:hover:not(:disabled) { background: #f3f0ea; }
+.primary-button, .secondary-button, .row-button, .icon-button,
+.upload-review-fields select, .upload-review-fields input,
+.login-form input, .permission-form input, .permission-form select {
+  border-radius: 8px;
+}
+.panel, .table-panel, .metric-card, .intake-drop-panel, .intake-rule-panel,
+.intake-processing-card, .intake-review-card, .login-card, .upload-modal {
+  border-color: #ebe7e8;
+  box-shadow: var(--shadow);
+}
+.metric-card i { background: #d92d5c; }
+.metric-card strong, .analysis-metric strong { font-weight: 560; }
+.text-button { color:#292526; }
+
+/* Solid workbench heroes replace decorative grid and translucent effects. */
+.finder-card, .cloud-catalog-hero, .intake-processing-card > header,
+.intake-drop-panel .intake-panel-head, .upload-review-file,
+.record-hero, .manual-action {
+  background: #292526;
+  background-image: none;
+  box-shadow: none;
+}
+.finder-card::after { display: none; }
+.finder-title small, .cloud-catalog-hero p:not(.eyebrow),
+.intake-processing-card header p, .intake-processing-card header span,
+.upload-review-file small, .record-hero > span, .record-hero p,
+.record-version span, .manual-action span { color: #ded7da; }
+.finder-form select, .finder-form label { background: #3a3436; border-color: #6f696b; }
+.finder-form select { color: #fff; }
+.finder-form input::placeholder { color: #d9d5d6; }
+.finder-form label button { color:#292526; background: #f7e8eb; }
+.finder-shortcuts, .finder-shortcuts button { color: #eee8eb; }
+.intake-step.active { color: #292526; border-color: #d9d5d6; background: #fff; box-shadow: none; }
+.intake-step.active i { border-color: #d92d5c; background: #d92d5c; }
+.intake-drop-panel .intake-panel-head span { color: #d9d8f6; }
+.intake-drop-panel .intake-panel-head em { color: #fff; }
+.upload-review-file > span { color:#292526; background: #f7e8eb; }
+.intake-batch-head { color: #fff; background: #0d0b0c; }
+.intake-batch-head span, .intake-batch-head p { color: #fff; }
+.intake-batch-head .secondary-button {
+  color: #fff;
+  border-color: #fff;
+  background: transparent;
+}
+.intake-batch-head .secondary-button:hover:not(:disabled) {
+  color: #0d0b0c;
+  background: #fff;
+}
+.cloud-catalog-hero .eyebrow { color: #d9d8f6; }
+.cloud-catalog-tree { background: #f8f6f4; }
+.cloud-search { background: #fff; }
+.cloud-tree-toggle:hover, .cloud-folder-button:hover, .cloud-doc-row:hover,
+.folder-toggle:hover, .folder-row.active { background: #f3f0ea; }
+.cloud-tree-toggle:focus-visible, .cloud-folder-button:focus-visible,
+.cloud-doc-row:focus-visible, .cloud-search:focus-within { outline-color: #6e68b8; }
+.cloud-folder-icon, .cloud-folder-icon::before { border-color: #a76a7e; }
+.cloud-folder-icon::before { background: #f8f6f4; }
+.register-cloud-intro, .dmr-source-note, .intake-initial-rule,
+.nas-directory-info, .nas-mapping-editor, .nas-service-box, .nas-account-state {
+  background: #faf8f7;
+}
+.dmr-source-note a, .nas-storage-toggle, .catalog-update-form-link,
+.catalog-update-fold-label { color:#292526; }
+.intake-initial-rule input { accent-color: #d92d5c; }
+.log-day-toggle { background: #f8f6f4; }
+.log-day-toggle:hover { background: #eee9e5; }
+.log-day-count { background: #f3f0ea; }
+.nas-storage-scroll th { background: #f3f0ea; }
+.nas-storage-summary:focus-visible, .exception-panel .exception-list:focus-visible {
+  outline-color: #6e68b8;
+}
+
+/* Attention states use lavender and neutral borders, never mustard yellow. */
+.catalog-updates { border-top-color: #d9d5d6; }
+.catalog-updates-heading h2 span, .catalog-update-state {
+  color: #5a559c;
+  background: #efeffb;
+}
+.catalog-update-card, .catalog-update-location.expired {
+  border-color: #d9d5d6;
+  background: #fff;
+}
+.cloud-catalog-actions .status-badge.warning {
+  color: #5a559c;
+  background: #efeffb;
+}
+.cloud-catalog-actions .status-badge.warning::before { background: #6e68b8; }
+.transfer-manifest-result.needs-review {
+  border-color: #d9d5d6;
+  background: #fff;
+}
+.sync-change.warning { border-color: #d9d5d6; background: #fff; }
+
+/* Readable controls and table states without changing their content. */
+.top-search:focus-within, .cloud-search:focus-within,
+.upload-review-fields :is(input, select):focus,
+.login-form input:focus, .permission-form :is(input, select):focus {
+  outline: 2px solid #6e68b8;
+  outline-offset: 1px;
+}
+.upload-dropzone { border-color: #d9d5d6; background: #faf8f7; }
+.upload-mark { color:#292526; border-color: #e4b3c1; }
+.upload-file i { background: #741d3e; }
+.updates-panel > .table-scroll th { background: #f3f0ea; }
+.updates-panel > .table-scroll:focus-visible,
+.source-health-panel > .source-health:focus-visible { outline-color: #6e68b8; }
+.modal-backdrop { background: rgba(13, 11, 12, .52); backdrop-filter: none; }
+
+@media (max-width: 760px) {
+  .topbar { background: #fff; }
+}

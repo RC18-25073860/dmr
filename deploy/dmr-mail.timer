@@ -1,0 +1,8 @@
+[Unit]
+Description=Mail intake at 18:30 Shanghai time
+[Timer]
+OnCalendar=*-*-* 18:30:00 Asia/Shanghai
+Persistent=true
+Unit=dmr-mail.service
+[Install]
+WantedBy=timers.target

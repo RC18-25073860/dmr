@@ -1,0 +1,15 @@
+[Unit]
+Description=DMR NAS worker
+After=network-online.target
+[Service]
+Type=simple
+User=dmr
+WorkingDirectory=/opt/dmr
+EnvironmentFile=/etc/dmr/nas.env
+ExecStart=/opt/dmr/.venv/bin/python -m nas_agent.worker
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+[Install]
+WantedBy=multi-user.target

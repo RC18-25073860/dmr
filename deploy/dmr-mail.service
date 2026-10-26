@@ -1,0 +1,11 @@
+[Unit]
+Description=DMR mail attachment intake
+After=network-online.target dmr.service
+[Service]
+Type=oneshot
+User=dmr
+WorkingDirectory=/opt/dmr
+Environment=DMR_MAIL_CONFIG=/etc/dmr/mail.json
+ExecStart=/opt/dmr/.venv/bin/python /opt/dmr/scripts/mail_sync.py --intake-only
+UMask=0077
+TimeoutStartSec=3600

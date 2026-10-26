@@ -1,0 +1,19 @@
+[Unit]
+Description=DMR single-instance platform
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=dmr
+Group=dmr
+WorkingDirectory=/opt/dmr
+EnvironmentFile=/etc/dmr/platform.env
+ExecStart=/opt/dmr/.venv/bin/python /opt/dmr/server.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStopSec=120
+[Install]
+WantedBy=multi-user.target

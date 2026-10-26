@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic
+cryptography>=46,<47
