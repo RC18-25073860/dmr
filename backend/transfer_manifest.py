@@ -36,6 +36,8 @@ def looks_like_transfer_manifest(filename: str) -> bool:
 
 def destination_for(filename: str) -> tuple[str, str]:
     """Return ISO transfer date and path relative to the configured share root."""
+    if re.match(r"^ECN-\d+[:：]", filename.strip(), re.I):
+        raise HTTPException(422, "ECN 转移清单由现有人工流程处理，平台不自动归档")
     match = FILENAME.fullmatch(filename)
     if not match:
         raise HTTPException(422, "转移清单文件名不符合约定格式，无法自动归档")

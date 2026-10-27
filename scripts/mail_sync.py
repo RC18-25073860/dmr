@@ -17,6 +17,7 @@ import hashlib
 import json
 import mimetypes
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,7 @@ MAX_ARCHIVE_FILES = 200
 MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
 ARCHIVE_SUFFIXES = (".zip", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tar.xz", ".gz")
 TRANSFER_MANIFEST_PREFIX = "DMR文件转移清单"
+EXCLUDED_MAIL_SUBJECT = re.compile(r"(?<![A-Za-z])(?:ECN|ENC)(?![A-Za-z])", re.I)
 
 
 class MailSyncError(RuntimeError):
@@ -388,7 +390,9 @@ def message_details(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def subject_matches(subject: str, includes: Iterable[str], excludes: Iterable[str]) -> bool:
-    return any(keyword in subject for keyword in includes) and not any(keyword in subject for keyword in excludes)
+    return (not EXCLUDED_MAIL_SUBJECT.search(subject or "")
+            and any(keyword in subject for keyword in includes)
+            and not any(keyword in subject for keyword in excludes))
 
 
 def internal_date_to_iso(value: Any) -> str:

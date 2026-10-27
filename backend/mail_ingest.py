@@ -18,7 +18,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 
 from backend.access import AccessPolicy
-from backend.mail_title import apply_mail_title_evidence, classify_mail_subject, extract_mail_title
+from backend.mail_title import apply_mail_title_evidence, classify_mail_subject, extract_mail_title, is_excluded_mail_subject
 from backend.transfer_manifest import TransferManifestArchive
 from backend.service import MAX_BODY, MAX_FILE_BYTES, clean_filename, json_dumps, json_loads, now_iso
 
@@ -422,6 +422,8 @@ class MailIngestService:
                             for e in exc.errors(include_input=False, include_context=False)]}) from exc
                     if any(p.mailbox != client["mailbox"] for p in payloads):
                         raise HTTPException(403, "mailbox不属于当前邮件接入客户端")
+                    if any(is_excluded_mail_subject(p.subject) for p in payloads):
+                        raise HTTPException(422, "ECN/ENC 邮件暂不接入平台，请按现有人工流程处理")
                     if sum(p.attachment.size for p in payloads) > MAIL_MAX_FILE_BYTES:
                         raise HTTPException(413, "邮件批次附件总量不能超过50MB；请减少附件后重试")
                     keys = [(p.mailbox, p.message_id, p.attachment.attachment_id) for p in payloads]
@@ -485,9 +487,7 @@ class MailIngestService:
                         metadata = metadata | {"email_source": email_source}
                         now = now_iso()
                         receipt_id = f"MAILRCPT-{uuid.uuid4().hex}"
-                        if email_source["mail_case"] == "ecn":
-                            metadata = self._force_ecn_review(item_id, batch_id, item | {"metadata": metadata}, now)
-                        elif title_evidence and title_evidence.get("conflicts"):
+                        if title_evidence and title_evidence.get("conflicts"):
                             metadata = self._force_title_conflict(item_id, batch_id, item | {"metadata": metadata}, title_evidence, now)
                         self.store.execute("UPDATE batches SET owner_user_id=?,updated_at=? WHERE id=?", (client["owner_user_id"], now, batch_id))
                         self.store.execute("UPDATE batch_items SET metadata=?,updated_at=? WHERE id=?", (json_dumps(metadata), now, item_id))
@@ -554,23 +554,6 @@ class MailIngestService:
                 "sha256": payload.sha256,
             },
         }
-
-    def _force_ecn_review(self, item_id: str, batch_id: str, item: dict[str, Any], now: str) -> dict[str, Any]:
-        note = "ECN 邮件属于变更批次，请人工核对关联 BOM 和全部附件；不能按 BOM 首次发放自动归档。"
-        metadata = dict(item.get("metadata") or {})
-        metadata["review_pending"] = True
-        metadata["review_note"] = note
-        self.store.execute(
-            "UPDATE batch_items SET status='conflict',recommendation=?,metadata=?,updated_at=? WHERE id=? AND batch_id=?",
-            (note, json_dumps(metadata), now, item_id, batch_id),
-        )
-        existing = self.store.execute("SELECT id FROM exceptions WHERE item_id=? AND status='open'", (item_id,)).fetchone()
-        if existing:
-            self.store.execute("UPDATE exceptions SET detail=? WHERE id=?", (note, existing["id"]))
-        else:
-            self.store.create_exception_for_item(batch_id, item_id, item.get("fileName") or "", "conflict", note,
-                                                 item.get("recordId") or "", item.get("code") or "")
-        return metadata
 
     def _force_title_conflict(self, item_id: str, batch_id: str, item: dict[str, Any], title_evidence: dict[str, Any], now: str) -> dict[str, Any]:
         conflicts = title_evidence.get("conflicts") or []
@@ -724,6 +707,8 @@ def install_mail_ingest(app: FastAPI, store, identity, policy) -> MailIngestServ
                     for item in exc.errors(include_input=False, include_context=False)]}) from exc
             if validated.mailbox != client["mailbox"]:
                 raise HTTPException(403, "mailbox不属于当前邮件接入客户端")
+            if is_excluded_mail_subject(validated.subject):
+                raise HTTPException(422, "ECN/ENC 邮件暂不接入平台，请按现有人工流程处理")
             return transfer_archive.ingest(client, validated, _fingerprint(service._normalized_payload(validated)), stage_only=stage_only)
         code, body = await run_in_threadpool(process)
         from fastapi.responses import JSONResponse

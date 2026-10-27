@@ -195,6 +195,15 @@ class MailIngestTests(unittest.TestCase):
         self.assertEqual(response.status_code, status, response.text)
         return response
 
+    def test_ecn_attachment_is_rejected_without_storing_file(self):
+        self.h.create_mail_client(self.admin)
+        for marker in ("ECN", "ENC"):
+            payload = self.content_payload(b"sample", subject=f"深圳由莱-{marker}（2026100005）BOM 变更")
+            self.ingest(payload, status=422)
+        self.assertEqual(self.h.store.execute("SELECT COUNT(*) AS n FROM mail_receipts").fetchone()["n"], 0)
+        self.assertEqual(self.h.store.execute("SELECT COUNT(*) AS n FROM batch_items").fetchone()["n"], 0)
+        self.assertEqual(list(self.h.store.files_dir.iterdir()), [])
+
     def test_admin_can_create_list_and_delete_mail_clients(self):
         owner, _password = self.h.create_user(self.admin, "dcc-owner", role="document_control")
         created = self.h.create_mail_client(self.admin, owner_user_id=owner["id"], mailbox="dcc@example.test")

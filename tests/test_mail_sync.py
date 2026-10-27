@@ -144,6 +144,35 @@ def fail_download(_dest):
 
 
 class MailSyncTests(unittest.TestCase):
+    def test_ecn_mail_is_skipped_before_detail_or_attachment_download(self):
+        for marker in ('ECN', 'ENC'):
+            with self.subTest(marker=marker), tempfile.TemporaryDirectory(dir=TEST_RUNTIME) as tmp:
+                subject = f'深圳由莱-{marker}（2026100005）BOM 转移资料'
+                runner = FakeRunner([{"ok": True, "data": {"messages": [{"message_id": "ecn-1", "subject": subject}]}},
+                                     {"ok": True, "data": {"messages": [{"message_id": "ecn-1", "subject": subject}]}}])
+                downloader = FakeDownloader([])
+                uploader = FakeUploader()
+                config = self.config(tmp, include_keywords=('BOM',), transfer_manifest_keywords=('转移',))
+                result = mail_sync.MailSync(config, runner=runner, downloader=downloader,
+                                            uploader=uploader, log=lambda _: None).run()
+                self.assertEqual(result.considered_messages, 0)
+                self.assertEqual(len(runner.commands), 2)
+                self.assertEqual(downloader.calls, [])
+                self.assertEqual(uploader.calls, [])
+
+    def test_ecn_subject_discovered_in_details_is_skipped(self):
+        with tempfile.TemporaryDirectory(dir=TEST_RUNTIME) as tmp:
+            detail = ok_details()
+            detail['data']['messages'][0]['subject'] = '深圳由莱-ECN（2026100005）BOM 更新'
+            runner = FakeRunner([ok_messages(), detail])
+            downloader = FakeDownloader([])
+            uploader = FakeUploader()
+            result = mail_sync.MailSync(self.config(tmp, include_keywords=('BOM',)), runner=runner,
+                                        downloader=downloader, uploader=uploader, log=lambda _: None).run()
+            self.assertEqual(result.skipped_messages, 1)
+            self.assertEqual(downloader.calls, [])
+            self.assertEqual(uploader.calls, [])
+
     def test_transfer_filename_bypasses_normal_attachment_pipeline(self):
         filename = 'DMR文件转移清单（BW-2026100801-深圳由莱）.xlsx'
         details = {"ok": True, "data": {"messages": [{

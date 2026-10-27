@@ -1,4 +1,3 @@
-import json
 import unittest
 from unittest.mock import patch
 from test_mail_ingest import MailIngestTests
@@ -29,19 +28,16 @@ class MailBatchTests(unittest.TestCase):
         payload['subject']='changed'
         self.assertEqual(client.post('/api/integrations/mail/batches',json=payload).status_code,409)
 
-    def test_ecn_subject_keeps_mail_case_separate_from_attachment_type(self):
+    def test_ecn_subject_is_rejected_before_storing_batch(self):
         self.h.create_mail_client(self.admin)
-        payload = self.group()
-        payload['subject'] = '深圳由莱-ECN（2026100005）BOM变更'
-        response = self.h.bearer_client().post('/api/integrations/mail/batches', json=payload)
-        self.assertEqual(response.status_code, 201, response.text)
-        rows = self.h.store.execute('SELECT metadata FROM batch_items WHERE batch_id=?',
-                                    (response.json()['batch_id'],)).fetchall()
-        self.assertEqual(len(rows), 2)
-        self.assertTrue(all(json.loads(row['metadata'])['email_source']['mail_case'] == 'ecn' for row in rows))
-        self.assertTrue(all(json.loads(row['metadata'])['review_pending'] for row in rows))
-        self.assertEqual(self.h.store.execute("SELECT COUNT(*) AS n FROM batch_items WHERE batch_id=? AND status='conflict'",
-                                              (response.json()['batch_id'],)).fetchone()['n'], 2)
+        for marker in ('ECN', 'ENC'):
+            payload = self.group()
+            payload['subject'] = f'深圳由莱-{marker}（2026100005）BOM变更'
+            response = self.h.bearer_client().post('/api/integrations/mail/batches', json=payload)
+            self.assertEqual(response.status_code, 422, response.text)
+        for table in ('mail_receipts', 'batch_items', 'batches'):
+            self.assertEqual(self.h.store.execute(f'SELECT COUNT(*) AS n FROM {table}').fetchone()['n'], 0)
+        self.assertEqual(list(self.h.store.files_dir.iterdir()), [])
 
     def test_validation_atomicity_and_auth(self):
         self.h.create_mail_client(self.admin)

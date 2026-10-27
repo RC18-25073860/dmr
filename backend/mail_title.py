@@ -42,6 +42,11 @@ def classify_mail_subject(subject: str) -> str:
     return "other"
 
 
+def is_excluded_mail_subject(subject: str) -> bool:
+    """ECN/ENC mail is handled outside the DMR mail intake."""
+    return bool(ECN_SUBJECT_RE.search(subject or ""))
+
+
 def extract_mail_title(subject: str) -> dict[str, Any]:
     """Extract conservative DMR hints from a mail subject.
 
@@ -61,8 +66,9 @@ def extract_mail_title(subject: str) -> dict[str, Any]:
     if category:
         fields["project_category"] = MailTitleField(category, category)
 
-    # An ECN mail may mention BOM files, but the mail itself is not a BOM issue.
-    module = "" if classify_mail_subject(text) == "ecn" else _single_module(text)
+    if is_excluded_mail_subject(text):
+        return {}
+    module = _single_module(text)
     if module:
         fields["module"] = MailTitleField(module, module)
 

@@ -119,10 +119,21 @@ class TransferManifestTests(unittest.TestCase):
         self.assertEqual(destination_for(legacy), ('2026-08-19', 'Y-2026/DMR-2026-08/' + legacy))
         self.assertEqual(destination_for('DMR文件转移清单（CMJ-2023073101）.xlsx')[0], '2023-07-31')
         self.assertEqual(destination_for('DMR文件转移清单(ZY-2024012201-深圳金茉).xlsx')[0], '2024-01-22')
-        self.assertEqual(destination_for('ECN-2024060007：DMR文件转移清单（CMJ-2024061102-深圳由莱）.xlsx')[0], '2024-06-11')
+        with self.assertRaisesRegex(Exception, 'ECN 转移清单由现有人工流程处理'):
+            destination_for('ECN-2024060007：DMR文件转移清单（CMJ-2024061102-深圳由莱）.xlsx')
         response = self.client.post('/api/integrations/mail/transfer-manifests',
                                     json=self.payload(filename='DMR文件转移清单（BW-2026023001-深圳由莱）.xlsx'))
         self.assertEqual(response.status_code, 422, response.text)
+
+    def test_browser_upload_does_not_archive_ecn_transfer_manifest(self):
+        filename = 'ECN-2024060007：DMR文件转移清单（CMJ-2024061102-深圳由莱）.xlsx'
+        with tempfile.TemporaryDirectory(dir=self.h.data_dir) as mount:
+            with patch.dict(os.environ, {'DMR_TRANSFER_ARCHIVE_MOUNT_ROOT': mount}):
+                response = self.admin.post('/api/transfer-manifests/upload', json={
+                    'name': filename, 'data': base64.b64encode(self.raw).decode()})
+            self.assertEqual(response.status_code, 422, response.text)
+            self.assertEqual(list(Path(mount).iterdir()), [])
+            self.assertEqual(self.h.store.execute('SELECT COUNT(*) AS n FROM transfer_manifests').fetchone()['n'], 0)
 
     def test_platform_receipt_retries_until_192_archive_succeeds(self):
         with patch.dict(os.environ, {'DMR_TRANSFER_ARCHIVE_MOUNT_ROOT': ''}):
@@ -157,6 +168,17 @@ class TransferManifestTests(unittest.TestCase):
             self.assertTrue(first.json()['staged_only'])
             self.assertEqual(list(Path(mount).iterdir()), [])
             self.assertEqual(self.h.store.execute('SELECT COUNT(*) AS n FROM records').fetchone()['n'], 0)
+
+    def test_ecn_mail_transfer_manifest_is_rejected_without_staging_or_writing(self):
+        with tempfile.TemporaryDirectory(dir=self.h.data_dir) as mount:
+            for marker in ('ECN', 'ENC'):
+                payload = self.payload()
+                payload['subject'] = f'深圳由莱-{marker}（2026100005）转移清单'
+                with patch.dict(os.environ, {'DMR_TRANSFER_ARCHIVE_MOUNT_ROOT': mount}):
+                    response = self.client.post('/api/integrations/mail/transfer-manifests', json=payload)
+                self.assertEqual(response.status_code, 422, response.text)
+            self.assertEqual(self.h.store.execute('SELECT COUNT(*) AS n FROM transfer_manifests').fetchone()['n'], 0)
+            self.assertEqual(list(Path(mount).iterdir()), [])
 
     def test_same_name_different_bytes_never_overwrites(self):
         with tempfile.TemporaryDirectory(dir=self.h.data_dir) as mount:

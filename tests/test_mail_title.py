@@ -1,6 +1,6 @@
 import unittest
 
-from backend.mail_title import apply_mail_title_evidence, classify_mail_subject, extract_mail_title
+from backend.mail_title import apply_mail_title_evidence, classify_mail_subject, extract_mail_title, is_excluded_mail_subject
 
 
 class MailTitleTests(unittest.TestCase):
@@ -9,7 +9,8 @@ class MailTitleTests(unittest.TestCase):
         self.assertEqual(classify_mail_subject('深圳由莱-ENC（2026100005）BOM变更'), 'ecn')
         self.assertEqual(classify_mail_subject('BOM发放（W20冷凝舱）'), 'bom')
         self.assertEqual(classify_mail_subject('资料更新'), 'other')
-        self.assertNotIn('module', extract_mail_title('深圳由莱-ECN（2026100005）BOM变更').get('fields', {}))
+        self.assertTrue(is_excluded_mail_subject('深圳由莱-ECN（2026100005）BOM变更'))
+        self.assertEqual(extract_mail_title('深圳由莱-ECN（2026100005）BOM变更'), {})
 
     def test_extracts_confirmed_subject_category_product_and_module_only(self):
         title = extract_mail_title("广西由莱-医疗项目-UI06S PR-DMR BOM-新版资料 V9.9")
